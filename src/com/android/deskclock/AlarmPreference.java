@@ -20,7 +20,9 @@ import android.content.Context;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.preference.RingtonePreference;
+import android.provider.Settings;
 import android.util.AttributeSet;
 
 /**
@@ -29,6 +31,8 @@ import android.util.AttributeSet;
  */
 public class AlarmPreference extends RingtonePreference {
     private Uri mAlert;
+    private boolean mChangeDefault;
+    private AsyncTask mRingtoneTask;
 
     public AlarmPreference(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -37,6 +41,12 @@ public class AlarmPreference extends RingtonePreference {
     @Override
     protected void onSaveRingtone(Uri ringtoneUri) {
         setAlert(ringtoneUri);
+        if (mChangeDefault) {
+            // Update the default alert in the system.
+            Settings.System.putString(getContext().getContentResolver(),
+                    Settings.System.ALARM_ALERT,
+                    ringtoneUri == null ? null : ringtoneUri.toString());
+        }
     }
 
     @Override
@@ -51,10 +61,33 @@ public class AlarmPreference extends RingtonePreference {
     public void setAlert(Uri alert) {
         mAlert = alert;
         if (alert != null) {
-            final Ringtone r = RingtoneManager.getRingtone(getContext(), alert);
-            if (r != null) {
-                setSummary(r.getTitle(getContext()));
+            setSummary(R.string.loading_ringtone);
+            if (mRingtoneTask != null) {
+                mRingtoneTask.cancel(true);
             }
+            mRingtoneTask = new AsyncTask<Uri, Void, String>() {
+                @Override
+                protected String doInBackground(Uri... params) {
+                    Ringtone r = RingtoneManager.getRingtone(
+                            getContext(), params[0]);
+                    if (r == null) {
+                        r = RingtoneManager.getRingtone(getContext(),
+                                Settings.System.DEFAULT_ALARM_ALERT_URI);
+                    }
+                    if (r != null) {
+                        return r.getTitle(getContext());
+                    }
+                    return null;
+                }
+
+                @Override
+                protected void onPostExecute(String title) {
+                    if (!isCancelled()) {
+                        setSummary(title);
+                        mRingtoneTask = null;
+                    }
+                }
+            }.execute(alert);
         } else {
             setSummary(R.string.silent_alarm_summary);
         }
@@ -62,5 +95,9 @@ public class AlarmPreference extends RingtonePreference {
 
     public Uri getAlert() {
         return mAlert;
+    }
+
+    public void setChangeDefault() {
+        mChangeDefault = true;
     }
 }

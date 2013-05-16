@@ -20,59 +20,44 @@
     android:orientation="vertical"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:gravity="left|center_vertical"
-    android:layout_weight="1"
     >
 
     <com.android.deskclock.DigitalClock android:id="@+id/time"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dip"
+        android:baselineAligned="false"
+        android:gravity="top"
         >
 
-        <TextView android:id="@+id/timeDisplay"
+        <com.android.deskclock.ZeroTopPaddingTextView
+            android:id="@+id/timeDisplayHours"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:paddingRight="@dimen/time_margin_right"
             android:singleLine="true"
             android:ellipsize="none"
-            android:gravity="center"
-            android:textSize="106sp"
-            android:textColor="#FFFFFFFF"
-            android:shadowColor="#C0000000"
-            android:shadowDx="0"
-            android:shadowDy="0"
-            android:shadowRadius="3.0"
-            android:paddingBottom="3dip"
-            />
-
-
-        <TextView android:id="@+id/am_pm"
+            style="@style/big_bold"
+            android:textColor="@color/clock_white" />
+        <com.android.deskclock.ZeroTopPaddingTextView
+            android:id="@+id/timeDisplayMinutes"
             android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:gravity="bottom"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:textStyle="bold"
+            android:layout_height="wrap_content"
+            style="@style/big_thin"
             android:singleLine="true"
             android:ellipsize="none"
-            android:layout_marginLeft="4dip"
-            android:shadowColor="#C0000000"
-            android:shadowDx="0"
-            android:shadowDy="0"
-            android:shadowRadius="3.0"
+            android:textColor="@color/clock_white" />
+        <com.android.deskclock.ZeroTopPaddingTextView
+            android:id="@+id/am_pm"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            style="@style/label"
+            android:singleLine="true"
+            android:ellipsize="none"
+            android:gravity="top"
+            android:textColor="@color/clock_white"
             />
 
     </com.android.deskclock.DigitalClock>
 
-    <TextView android:id="@+id/date"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:gravity="left"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:shadowColor="#C0000000"
-        android:shadowDx="0"
-        android:shadowDy="0"
-        android:shadowRadius="3.0"
-        android:layout_marginLeft="4dip"
-        />
 
 </LinearLayout>

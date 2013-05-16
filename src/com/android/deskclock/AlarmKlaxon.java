@@ -26,22 +26,22 @@ import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnErrorListener;
 import android.media.RingtoneManager;
 import android.net.Uri;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Vibrator;
+import android.preference.PreferenceManager;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
+import android.text.format.DateUtils;
 
 /**
  * Manages alarms and vibe. Runs as a service so that it can continue to play
  * if another activity overrides the AlarmAlert dialog.
  */
 public class AlarmKlaxon extends Service {
-
-    /** Play alarm up to 10 minutes before silencing */
-    private static final int ALARM_TIMEOUT_SECONDS = 10 * 60;
+    // Default of 10 minutes until alarm is silenced.
+    private static final String DEFAULT_ALARM_TIMEOUT = "10";
 
     private static final long[] sVibratePattern = new long[] { 500, 500 };
 
@@ -56,13 +56,14 @@ public class AlarmKlaxon extends Service {
     // Internal messages
     private static final int KILLER = 1000;
     private Handler mHandler = new Handler() {
+        @Override
         public void handleMessage(Message msg) {
             switch (msg.what) {
                 case KILLER:
                     if (Log.LOGV) {
                         Log.v("*********** Alarm killer triggered ***********");
                     }
-                    sendKillBroadcast((Alarm) msg.obj);
+                    sendKillBroadcast((Alarm) msg.obj, false);
                     stopSelf();
                     break;
             }
@@ -78,7 +79,7 @@ public class AlarmKlaxon extends Service {
             // we don't kill the alarm during a call.
             if (state != TelephonyManager.CALL_STATE_IDLE
                     && state != mInitialCallState) {
-                sendKillBroadcast(mCurrentAlarm);
+                sendKillBroadcast(mCurrentAlarm, false);
                 stopSelf();
             }
         }
@@ -98,6 +99,9 @@ public class AlarmKlaxon extends Service {
     @Override
     public void onDestroy() {
         stop();
+        Intent alarmDone = new Intent(Alarms.ALARM_DONE_ACTION);
+        sendBroadcast(alarmDone);
+
         // Stop listening for incoming calls.
         mTelephonyManager.listen(mPhoneStateListener, 0);
         AlarmAlertWakeLock.releaseCpuLock();
@@ -126,7 +130,7 @@ public class AlarmKlaxon extends Service {
         }
 
         if (mCurrentAlarm != null) {
-            sendKillBroadcast(mCurrentAlarm);
+            sendKillBroadcast(mCurrentAlarm, true);
         }
 
         play(alarm);
@@ -138,12 +142,13 @@ public class AlarmKlaxon extends Service {
         return START_STICKY;
     }
 
-    private void sendKillBroadcast(Alarm alarm) {
+    private void sendKillBroadcast(Alarm alarm, boolean replaced) {
         long millis = System.currentTimeMillis() - mStartTime;
-        int minutes = (int) Math.round(millis / 60000.0);
+        int minutes = (int) Math.round(millis / (double)DateUtils.MINUTE_IN_MILLIS);
         Intent alarmKilled = new Intent(Alarms.ALARM_KILLED);
         alarmKilled.putExtra(Alarms.ALARM_INTENT_EXTRA, alarm);
         alarmKilled.putExtra(Alarms.ALARM_KILLED_TIMEOUT, minutes);
+        alarmKilled.putExtra(Alarms.ALARM_REPLACED, replaced);
         sendBroadcast(alarmKilled);
     }
 
@@ -174,6 +179,7 @@ public class AlarmKlaxon extends Service {
             // RingtoneManager.
             mMediaPlayer = new MediaPlayer();
             mMediaPlayer.setOnErrorListener(new OnErrorListener() {
+                @Override
                 public boolean onError(MediaPlayer mp, int what, int extra) {
                     Log.e("Error occurred while playing audio.");
                     mp.stop();
@@ -259,9 +265,6 @@ public class AlarmKlaxon extends Service {
         if (mPlaying) {
             mPlaying = false;
 
-            Intent alarmDone = new Intent(Alarms.ALARM_DONE_ACTION);
-            sendBroadcast(alarmDone);
-
             // Stop audio playing
             if (mMediaPlayer != null) {
                 mMediaPlayer.stop();
@@ -283,8 +286,15 @@ public class AlarmKlaxon extends Service {
      * popped, so the user will know that the alarm tripped.
      */
     private void enableKiller(Alarm alarm) {
-        mHandler.sendMessageDelayed(mHandler.obtainMessage(KILLER, alarm),
-                1000 * ALARM_TIMEOUT_SECONDS);
+        final String autoSnooze =
+                PreferenceManager.getDefaultSharedPreferences(this)
+                .getString(SettingsActivity.KEY_AUTO_SILENCE,
+                        DEFAULT_ALARM_TIMEOUT);
+        int autoSnoozeMinutes = Integer.parseInt(autoSnooze);
+        if (autoSnoozeMinutes != -1) {
+            mHandler.sendMessageDelayed(mHandler.obtainMessage(KILLER, alarm),
+                    autoSnoozeMinutes * DateUtils.MINUTE_IN_MILLIS);
+        }
     }
 
     private void disableKiller() {

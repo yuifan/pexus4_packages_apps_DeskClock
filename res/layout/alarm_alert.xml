@@ -14,87 +14,92 @@
      limitations under the License.
 -->
 
-<LinearLayout
+<RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:dc="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:gravity="center">
+    android:background="@color/black">
 
     <LinearLayout
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:gravity="center_horizontal"
-        android:background="@drawable/dialog"
-        android:orientation="vertical">
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:layout_marginTop="32sp"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentTop="true"
+        >
 
         <TextView android:id="@+id/alertTitle"
-            style="?android:attr/textAppearanceLarge"
-            android:padding="5dip"
             android:singleLine="true"
             android:ellipsize="end"
-            android:gravity="center"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-        <ImageView
-            android:layout_width="match_parent"
-            android:layout_height="1dip"
-            android:scaleType="fitXY"
-            android:gravity="fill_horizontal"
-            android:src="@drawable/dialog_divider_horizontal_light"
-            android:layout_marginLeft="10dip"
-            android:layout_marginRight="10dip"/>
+            style="@style/header_not_caps"
+            android:paddingLeft="@dimen/label_margin_big"
+            android:paddingBottom="@dimen/label_margin_small"
+            android:textColor="@color/clock_white"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
 
         <com.android.deskclock.DigitalClock
-            style="@style/clock"
-            android:paddingTop="30dip"
-            android:paddingBottom="30dip"
-            android:baselineAligned="true"
-            android:gravity="center_horizontal">
-
-            <TextView android:id="@+id/timeDisplay"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="64sp"
-                android:textColor="?android:attr/textColorPrimary"/>
-
-            <TextView android:id="@+id/am_pm"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textStyle="bold"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                android:textColor="?android:attr/textColorPrimary"/>
-
-        </com.android.deskclock.DigitalClock>
-
-        <LinearLayout
+            android:id="@+id/digitalClock"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            style="@android:style/ButtonBar">
-
-            <Button
-                android:id="@+id/snooze"
+            android:gravity="top"
+            android:paddingBottom="24dp"
+            android:baselineAligned="false"
+            >
+            <com.android.deskclock.ZeroTopPaddingTextView
+                android:id="@+id/timeDisplayHours"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="3"
-                android:text="@string/alarm_alert_snooze_text" />
-
-            <!-- blank stretchable view -->
-            <View
-                android:layout_width="2dip"
-                android:layout_height="2dip"
-                android:layout_gravity="fill_horizontal"
-                android:layout_weight="1"/>
-
-            <Button
-                android:id="@+id/dismiss"
+                android:paddingRight="@dimen/time_margin_right"
+                android:singleLine="true"
+                android:ellipsize="none"
+                style="@style/big_bold"
+                android:textColor="@color/clock_white"/>
+            <com.android.deskclock.ZeroTopPaddingTextView
+                android:id="@+id/timeDisplayMinutes"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="3"
-                android:text="@string/alarm_alert_dismiss_text" />
-
-        </LinearLayout>
-
+                style="@style/big_thin"
+                android:singleLine="true"
+                android:ellipsize="none"
+                android:textColor="@color/clock_white"/>
+            <com.android.deskclock.ZeroTopPaddingTextView
+                android:id="@+id/am_pm"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                style="@style/label"
+                android:singleLine="true"
+                android:ellipsize="none"
+                android:textColor="@color/clock_white"
+                />
+        </com.android.deskclock.DigitalClock>
     </LinearLayout>
 
-</LinearLayout>
+    <com.android.deskclock.widget.multiwaveview.GlowPadView
+        android:id="@+id/glow_pad_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/glowpadview_margin_bottom"
+        android:focusable="true"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:gravity="center"
+        android:layout_gravity="center_vertical"
+
+        dc:targetDrawables="@array/snooze_dismiss_drawables"
+        dc:targetDescriptions="@array/snooze_dismiss_descriptions"
+        dc:directionDescriptions="@array/snooze_dismiss_direction_descriptions"
+        dc:handleDrawable="@drawable/ic_alarm_alert_touch_handle"
+        dc:outerRingDrawable="@drawable/ic_alarm_alert_outerring"
+        dc:outerRadius="@dimen/glowpadview_target_placement_radius"
+        dc:innerRadius="@dimen/glowpadview_inner_radius"
+        dc:snapMargin="@dimen/glowpadview_snap_margin"
+        dc:feedbackCount="1"
+        dc:vibrationDuration="20"
+        dc:glowRadius="@dimen/glowpadview_glow_radius"
+        dc:pointDrawable="@drawable/ic_lockscreen_glowdot"
+        />
+
+</RelativeLayout>
